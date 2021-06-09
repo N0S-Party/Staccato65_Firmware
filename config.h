@@ -27,14 +27,14 @@
 #define RGBLIGHT_VAL_STEP 8
 #define RGBLIGHT_LIMIT_VAL 255  // Maximum brightness level
 #define RGBLIGHT_SLEEP          // If defined, the RGB lighting will be switched off when the host goes to sleep
-//#define RGBLIGHT_ANIMATIONS     // All animations enable
-// #define RGBLIGHT_EFFECT_BREATHING
+// #define RGBLIGHT_ANIMATIONS     // All animations enable
+#define RGBLIGHT_EFFECT_BREATHING
 #define RGBLIGHT_EFFECT_RAINBOW_MOOD
-// #define RGBLIGHT_EFFECT_RAINBOW_SWIRL
+#define RGBLIGHT_EFFECT_RAINBOW_SWIRL
 #define RGBLIGHT_EFFECT_SNAKE
-// #define RGBLIGHT_EFFECT_KNIGHT
-// #define RGBLIGHT_EFFECT_CHRISTMAS
-// #define RGBLIGHT_EFFECT_STATIC_GRADIENT
+#define RGBLIGHT_EFFECT_KNIGHT
+#define RGBLIGHT_EFFECT_CHRISTMAS
+#define RGBLIGHT_EFFECT_STATIC_GRADIENT
 // #define RGBLIGHT_EFFECT_RGB_TEST
 // #define RGBLIGHT_EFFECT_ALTERNATING
 
@@ -42,10 +42,12 @@
 #define ENCODERS_PAD_A { B7 }
 #define ENCODERS_PAD_B { B0 }
 #define ENCODER_RESOLUTION 4
+#define ENCODER_DIRECTION_FLIP
 #define TAP_CODE_DELAY 50
 
 /* OLED Display Settings */
-#define BONGO_CAT
+//#define BONGO_CAT
+#define NEW_BONGO_CAT
 //#define ANIME_OLED
 //#define SUPREME_OLED
 #define OLED_TIMEOUT 60000
@@ -55,4 +57,4 @@
 #define NO_ACTION_MACRO         // Disable old-style macro handling
 #define NO_ACTION_FUNCTION      // Disable old-style function handling
 #define NO_ACTION_ONESHOT       // Disable one-shot modifiers
-//#define FORCE_NKRO            // Having NKRO makes it less compatible
+#define FORCE_NKRO              // Having NKRO makes it less compatible

@@ -9,7 +9,7 @@
 //#define PREP_FRAMES 1     // uncomment if >1
 #define TAP_FRAMES 2
 #define TAP_SPEED 70        // above this wpm value typing animation to triggere
-#define ANIM_FRAME_DURATION 200 // how long each frame lasts in ms
+#define ANIM_FRAME_DURATION 200   // how long each frame lasts in ms
 #define ANIM_SIZE 512       // number of bytes in array, minimize for adequate firmware size, max is 1024
 
 uint32_t anim_timer = 0;
@@ -17,6 +17,12 @@ uint32_t anim_sleep = 0;
 uint8_t current_idle_frame = 0;
 //uint8_t current_prep_frame = 0; // uncomment if PREP_FRAMES >1
 uint8_t current_tap_frame = 0;
+
+#ifdef NEW_BONGO_CAT
+#define KEY_PRESS_TIMER 300
+uint32_t key_press_timer = 0;
+bool key_is_pressed = 0;
+#endif
 
 /* WPM */
 uint8_t curr_wpm = 0;
@@ -26,22 +32,23 @@ char wpm_str[10] = {0};
 enum layers {
     _LAYER0,
     _LAYER1,
-    _LAYER2
+    _LAYER2,
+    _LAYER3
 };
 
-bool spam_enter;
-uint16_t spam_timer = false;
-uint16_t spam_interval = 30; // (1000ms == 1s)
+// bool spam_enter;
+// uint16_t spam_timer = false;
+// uint16_t spam_interval = 30; // (1000ms == 1s)
 
-enum custom_keycodes {
-  KC_EEEE = SAFE_RANGE
-};
+// enum custom_keycodes {
+//   KC_EEEE = SAFE_RANGE
+// };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_LAYER0] =  LAYOUT(
-    KC_GESC,  KC_1,  KC_2,  KC_3,  KC_4,  KC_5,  KC_6,  KC_7,  KC_8,  KC_9, KC_0, KC_MINS, KC_EQL, KC_BSPC,    MO(2), KC_MPLY,
+    KC_GESC,  KC_1,  KC_2,  KC_3,  KC_4,  KC_5,  KC_6,  KC_7,  KC_8,  KC_9, KC_0, KC_MINS, KC_EQL, KC_BSPC,    MO(3), KC_MPLY,
     KC_TAB,   KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LBRC, KC_RBRC,       KC_BSLS,     KC_INS,
-    KC_CAPS,   KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, KC_QUOT,            KC_ENT,      KC_DEL,
+    MO(2),   KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, KC_QUOT,              KC_ENT,      KC_DEL,
     KC_LSFT,    KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_RSHIFT,         KC_UP,
     KC_LCTL, KC_LGUI, KC_LALT,         KC_SPC,               KC_RALT, KC_RCTL,                KC_LEFT, KC_DOWN, KC_RIGHT
     ),
@@ -49,40 +56,38 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_LAYER1] =  LAYOUT(
     KC_GESC,  KC_1,  KC_2,  KC_3,  KC_4,  KC_5,  KC_6,  KC_7,  KC_8,  KC_9, KC_0, KC_MINS, KC_EQL, KC_BSPC,    KC_TRNS, KC_BTN3,
     KC_TAB,   KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LBRC, KC_RBRC,       KC_BSLS,     KC_INS,
-    KC_CAPS,   KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, KC_QUOT,            KC_ENT,      KC_DEL,
+    KC_TRNS,   KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, KC_QUOT,            KC_ENT,      KC_DEL,
     KC_LSFT,    KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_BTN2,           KC_MS_U,
     KC_LCTL, KC_LGUI, KC_LALT,         KC_SPC,               KC_RALT, KC_BTN1,                KC_MS_L, KC_MS_D, KC_MS_R
     ),
 
-    [_LAYER2] = LAYOUT(
+    [_LAYER2] =  LAYOUT(
+    KC_GESC,  KC_1,  KC_2,  KC_3,  KC_4,  KC_5,  KC_6,  KC_7,  KC_8,  KC_9, KC_0, KC_MINS, KC_EQL, KC_BSPC,    MO(3), KC_MPLY,
+    KC_TAB,   KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_UP, KC_O, KC_P, KC_LBRC, KC_RBRC,       KC_BSLS,     KC_INS,
+    KC_TRNS,   KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_LEFT, KC_DOWN, KC_RIGHT, KC_SCLN, KC_QUOT,            KC_ENT,      KC_DEL,
+    KC_LSFT,    KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_RSHIFT,         KC_UP,
+    KC_LCTL, KC_LGUI, KC_LALT,         KC_SPC,               KC_RALT, KC_RCTL,                KC_LEFT, KC_DOWN, KC_RIGHT
+    ),
+
+    [_LAYER3] = LAYOUT(
     KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12, KC_TRNS,                                    KC_TRNS, KC_MSEL,
 
-    KC_TRNS,   RGB_TOG, RGB_MOD, RGB_M_SW, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,       KC_TRNS,      KC_EEEE,
-    KC_TRNS,   RGB_VAI, RGB_SPI, RGB_HUI, RGB_SAI, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            KC_TRNS,           KC_TRNS,
+    KC_TRNS,   RGB_TOG, RGB_RMOD, RGB_MOD, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,       KC_TRNS,      KC_TRNS,
+    KC_CAPS,   RGB_VAI, RGB_SPI, RGB_HUI, RGB_SAI, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,            KC_TRNS,           KC_TRNS,
     KC_TRNS,    RGB_VAD, RGB_SPD, RGB_HUD, RGB_SAD, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_MPLY,             KC_VOLU,
     KC_TRNS, KC_TRNS, KC_TRNS,         KC_TRNS,               KC_TRNS, TG(1),                                         KC_MPRV, KC_VOLD, KC_MNXT
     )
-
 };
 
+#ifdef NEW_BONGO_CAT
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
-  case KC_EEEE: // Toggle's if we hit "ENTER" or "BACKSPACE" to input macros
-    if (record->event.pressed) {
-      spam_enter ^= 1;
-      spam_timer = timer_read();
+    if(record->event.pressed){
+        key_press_timer = timer_read32();
     }
-    return false;
-  }
-  return true;
+    return true;
 }
 
-void matrix_scan_user(void) {
-    if (spam_enter && timer_elapsed(spam_timer) >= spam_interval) {
-        spam_timer = timer_read();
-        SEND_STRING(SS_TAP(X_BTN2));
-  }
-}
+#endif /* NEW_BONGO_CAT */
 
 #ifdef ENCODER_ENABLE
 void encoder_update_user(uint8_t index, bool clockwise) {
@@ -91,7 +96,7 @@ void encoder_update_user(uint8_t index, bool clockwise) {
             if (clockwise) tap_code(KC_VOLU);
             else tap_code(KC_VOLD);
             break;
-        case _LAYER2:
+        case _LAYER3:
             if (clockwise) tap_code(KC_MNXT);
             else tap_code(KC_MPRV);
             break;
@@ -148,8 +153,8 @@ void int_to_str(char* str, uint8_t n) {
     str[3] = '\0';
 }
 
-#ifdef BONGO_CAT
-
+#if defined(BONGO_CAT) || defined(NEW_BONGO_CAT)
+// Modified bongo cat OLED animation, credits to ObliviousGmn, Dokuu
 static const char PROGMEM idle[IDLE_FRAMES][ANIM_SIZE] = {
 
     {
@@ -189,7 +194,7 @@ static const char PROGMEM idle[IDLE_FRAMES][ANIM_SIZE] = {
 
 };
 
-#ifdef ENABLE_PREP
+#if defined(ENABLE_PREP) && !defined(NEW_BONGO_CAT)
 static const char PROGMEM prep[][ANIM_SIZE] = {
 
     {
@@ -220,54 +225,78 @@ static const char PROGMEM tap[TAP_FRAMES][ANIM_SIZE] = {
 
 };
 
+void animation_phase(void) {
+
+#if !defined(NEW_BONGO_CAT)
+    if(curr_wpm <= IDLE_SPEED){
+        current_idle_frame = (current_idle_frame + 1) % IDLE_FRAMES;
+        oled_write_raw_P(idle[abs((IDLE_FRAMES-1)-current_idle_frame)], ANIM_SIZE);
+    }
+
+#ifdef ENABLE_PREP
+    if(curr_wpm >IDLE_SPEED && curr_wpm <TAP_SPEED){
+        // oled_write_raw_P(prep[abs((PREP_FRAMES-1)-current_prep_frame)], ANIM_SIZE); // uncomment if IDLE_FRAMES >1
+        oled_write_raw_P(prep[0], ANIM_SIZE);  // remove if IDLE_FRAMES >1
+    }
+#endif /* ENABLE_PREP */
+
+    if(curr_wpm >=TAP_SPEED){
+        current_tap_frame = (current_tap_frame + 1) % TAP_FRAMES;
+        oled_write_raw_P(tap[abs((TAP_FRAMES-1)-current_tap_frame)], ANIM_SIZE);
+    }
+
+    prev_wpm = curr_wpm;
+
+#endif /* NEW_BONGO_CAT */
+}
+
 
 // Images credit j-inc(/James Incandenza) and pixelbenny. Credit to obosob for initial animation approach.
 static void render_anim(void) {
 
-    //assumes 1 frame prep stage
-    void animation_phase(void) {
-        if(curr_wpm <= IDLE_SPEED){
+
+#ifndef NEW_BONGO_CAT
+
+    if(curr_wpm > prev_wpm) {
+        oled_on(); // not essential but turns on animation OLED with any alpha keypress
+        anim_sleep = timer_read32();
+    }
+
+    if(timer_elapsed32(anim_sleep) > OLED_TIMEOUT){
+        oled_off();
+    }
+    else if(timer_elapsed32(anim_timer) > ANIM_FRAME_DURATION){
+        anim_timer = timer_read32();
+        animation_phase();
+    }
+
+#else
+
+    if(timer_elapsed32(anim_timer) > ANIM_FRAME_DURATION){
+        if(timer_elapsed32(key_press_timer) < KEY_PRESS_TIMER){
+            oled_on();
+            anim_sleep = timer_read32();
+            current_tap_frame = (current_tap_frame + 1) % TAP_FRAMES;
+            oled_write_raw_P(tap[abs((TAP_FRAMES-1)-current_tap_frame)], ANIM_SIZE);
+        }
+        else{
             current_idle_frame = (current_idle_frame + 1) % IDLE_FRAMES;
             oled_write_raw_P(idle[abs((IDLE_FRAMES-1)-current_idle_frame)], ANIM_SIZE);
-         }
-
-#ifdef ENABLE_PREP
-        if(curr_wpm >IDLE_SPEED && curr_wpm <TAP_SPEED){
-             // oled_write_raw_P(prep[abs((PREP_FRAMES-1)-current_prep_frame)], ANIM_SIZE); // uncomment if IDLE_FRAMES >1
-             oled_write_raw_P(prep[0], ANIM_SIZE);  // remove if IDLE_FRAMES >1
         }
-#endif /* ENABLE_PREP */
-
-        if(curr_wpm >=TAP_SPEED){
-             current_tap_frame = (current_tap_frame + 1) % TAP_FRAMES;
-             oled_write_raw_P(tap[abs((TAP_FRAMES-1)-current_tap_frame)], ANIM_SIZE);
-        }
-
-        prev_wpm = curr_wpm;
+        anim_timer = timer_read32();
     }
 
-    if(curr_wpm != prev_wpm) {
-        oled_on(); // not essential but turns on animation OLED with any alpha keypress
-        if(timer_elapsed32(anim_timer) > ANIM_FRAME_DURATION) {
-            anim_timer = timer_read32();
-            animation_phase();
-        }
-        anim_sleep = timer_read32();
-    } else {
-        if(timer_elapsed32(anim_sleep) > OLED_TIMEOUT) {
-            oled_off();
-        } else {
-            if(timer_elapsed32(anim_timer) > ANIM_FRAME_DURATION) {
-                anim_timer = timer_read32();
-                animation_phase();
-            }
-        }
+    if(timer_elapsed32(anim_sleep) > OLED_TIMEOUT){
+        oled_off();
     }
+
+
+#endif
 }
-#endif /* BONGO_CAT */
+#endif /* BONGO_CAT || NEW_BONGO_CAT */
 
 void oled_task_user(void) {
-#ifdef BONGO_CAT
+#if defined(BONGO_CAT) || defined(NEW_BONGO_CAT)
     curr_wpm = get_current_wpm();
     render_anim();
 
@@ -290,6 +319,9 @@ void oled_task_user(void) {
             break;
         case _LAYER2:
             oled_write("2  ", false);
+            break;
+        case _LAYER3:
+            oled_write("3  ", false);
             break;
         default:
             oled_write("N/A", false);
